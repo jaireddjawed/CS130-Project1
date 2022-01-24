@@ -1,2 +1,4 @@
 .DS_STORE
 ./proj-rt-files/.DS_STORE
+./proj-rt-files/CMakeFiles
+./proj-rt-files/grading
