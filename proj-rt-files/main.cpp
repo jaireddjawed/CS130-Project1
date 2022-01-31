@@ -67,14 +67,6 @@ int main(int argc, char** argv)
     const char* statistics_file = 0;
     int test_x=-1, test_y=-1;
 
-    vec3 u = {2, 3, 4};
-    vec3 v = {4, 5, 6};
-
-    // multiply u by 3
-    u[0] *= 3;
-    u[1] *= 3;
-    u[2] *= 3;
-
     // Parse commandline options
     while(1)
     {
