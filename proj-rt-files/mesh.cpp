@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string>
 #include <limits>
+#include "plane.h"
 
 // Consider a triangle to intersect a ray if the ray intersects the plane of the
 // triangle with barycentric weights in [-weight_tolerance, 1+weight_tolerance]
@@ -42,16 +43,45 @@ void Mesh::Read_Obj(const char* file)
 // Check for an intersection against the ray.  See the base class for details.
 Hit Mesh::Intersection(const Ray& ray, int part) const
 {
-    TODO;
-    return {};
+    Hit hit = {0, 0, 0};
+
+    if (part < 0) {
+        hit.dist = std::numeric_limits<double>::max();
+        unsigned int i = 0;
+
+        while (i < triangles.size()) {
+            double temp_dist;
+            bool doesIntersect = Intersect_Triangle(ray, i, temp_dist);
+
+            if (doesIntersect && temp_dist < hit.dist) {
+                hit.object = this;
+                hit.dist = temp_dist;
+                hit.part = i;
+            }
+
+            i += 1;
+        }
+    }
+    else if (part >= 0) {
+        bool doesIntersect = Intersect_Triangle(ray, part, hit.dist);
+        if (doesIntersect) {
+            hit.object = this;
+            hit.part = part;
+        }
+    }
+
+    return hit;
 }
 
 // Compute the normal direction for the triangle with index part.
 vec3 Mesh::Normal(const vec3& point, int part) const
 {
     assert(part>=0);
-    TODO;
-    return vec3();
+
+    ivec3 points = triangles[part];
+    return cross(
+        vertices[points[1]] - vertices[points[0]],
+        vertices[points[2]] - vertices[points[0]]).normalized();
 }
 
 // This is a helper routine whose purpose is to simplify the implementation
@@ -68,7 +98,28 @@ vec3 Mesh::Normal(const vec3& point, int part) const
 // two triangles.
 bool Mesh::Intersect_Triangle(const Ray& ray, int tri, double& dist) const
 {
-    TODO;
+    ivec3 points = triangles[tri];
+
+    vec3 normal = Normal(vertices[points[0]], tri);
+    Hit hit = Plane(vertices[points[0]], normal)
+        .Intersection(ray, tri);
+
+    if (hit.object != NULL) {
+        vec3 u = ray.direction;
+        vec3 v = vertices[points[1]] - vertices[points[0]];
+        vec3 w = vertices[points[2]] - vertices[points[0]];
+        vec3 y = ray.endpoint - vertices[points[0]];
+
+        double gamma = dot(cross(u, v), y) / dot(cross(u, v), w);
+        double beta = dot(cross(w, u), y) / dot(cross(u, v), w);
+        double alpha = 1 - gamma - beta;
+
+        if (dot(cross(u, v), w) && gamma > -weight_tol && beta > -weight_tol && alpha > -weight_tol) {
+            dist = hit.dist;
+            return true;
+        }
+    }
+
     return false;
 }
 
