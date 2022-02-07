@@ -25,11 +25,12 @@ Shade_Surface(const Ray& ray,const vec3& intersection_point,
 
         Hit hit = world.Closest_Intersection(myRay);
 
-        if (world.enable_shadows) {
-            if ((myRay.Point(hit.dist) - intersection_point).magnitude() < l.magnitude()) {
+        if (!(
+            world.enable_shadows == false ||
+            hit.object == NULL            ||
+            (myRay.Point(hit.dist) - intersection_point).magnitude() > l.magnitude())) {
                 continue;
             }
-        }
 
         vec3 light_color = world.lights[i]->Emitted_Light(l);
 
